@@ -6,8 +6,11 @@ var selectedMonth = function () {
 	return selectedDate.getMonth();
 }
 
-function Day (d) {
-	this.day = d;
+function Day (dm, dw, m, cm) {
+	this.dayOfMonth = dm;
+	this.dayOfWeek = dw;
+	this.month = m;
+	this.isCurrentMonth = cm;
 };
 
 Date.prototype.monthDays= function(){
@@ -26,9 +29,25 @@ var renderNavElement = function () {
 	var monthAndYearLabel = currentMonth + ", " + currentYear;
 
 	var monthLabelElement = document.getElementById("month-label");
+	monthLabelElement.innerHTML = "";
 	monthLabelElement.appendChild(document.createTextNode(monthAndYearLabel));
 }
 
+var renderMonthBody = function () {
+	var month = buildMonthDays();
+	var calendarBody = document.getElementById("calendar-body");
+	calendarBody.innerHTML = "";
+	month.forEach(function(week) {
+		week.forEach(function(day) {
+			calendarBody.appendChild(createDayDOM(day));
+		})
+	})
+}
+
+var renderCalendar = function () {
+	renderNavElement();
+	renderMonthBody();
+}
 
 var buildMonthDays = function () {
 	var month = [];
@@ -43,64 +62,54 @@ var buildMonthDays = function () {
 	var currentMonthDate = 1;
 	var nextMonthDate = 1;
 
-	var calendarBody = document.getElementById("calendar-body");
-	var isThisMonth = false;
-
 	for(var i=0; i<6; i++) {
 		month[i] = [];
 		for(var j=0; j<7; j++) {
-
+			var newDay;
 			if (i === 0) {
 				if (j >= firstDayOfMonth) {
-					month[i][j] = currentMonthDate;
+					month[i][j] = new Day(currentMonthDate, j, selectedDate.getMonth(), true);
 					currentMonthDate ++;
-					isThisMonth = true;
 
 				} else {
-					month[i][j] = previousMonthDate;
+					month[i][j] = new Day(previousMonthDate, j, selectedDate.getMonth(), false);
 					previousMonthDate ++;
-					isThisMonth = false;
 				}
 			} else {
 				if(currentMonthDate <= numberOfDays) {
-					month[i][j] = currentMonthDate;
+					month[i][j] = new Day(currentMonthDate, j, selectedDate.getMonth(), true);
 					currentMonthDate++;
-					isThisMonth = true;
 				} else {
-					month[i][j] = nextMonthDate;
+					month[i][j] = new Day(nextMonthDate, j, selectedDate.getMonth(), false);
 					nextMonthDate ++;
-					isThisMonth = false;
 				}
 			}
-
-			appendDayElement(month[i][j], j, isThisMonth);
 		}
 	}
-
 	return month;
 }
 
-var renderDayElement = function (date, day, currentMonth) {
-	var dayElement = document.createElement('div');
+var createDayDOM = function (day) {
+	var dayDOM = document.createElement('div');
 	var today = new Date();
 
-	if (day === 0 || day === 6) {
-		dayElement.setAttribute("class", "day-column weekend");
+	if (day.dayOfWeek === 0 || day.dayOfWeek === 6) {
+		dayDOM.setAttribute("class", "day-column weekend");
 	} else {
-		dayElement.setAttribute("class", "day-column");
+		dayDOM.setAttribute("class", "day-column");
 	}
 
-	if(date === today.getDate()) {
-		dayElement.className += " today";
+	if(day.dayOfMonth === today.getDate() && today.getMonth() === day.month) {
+		dayDOM.className += " today";
 	}
 
-	if(!currentMonth) {
-		dayElement.className += " not-in-month"
+	if(!day.isCurrentMonth) {
+		dayDOM.className += " not-in-month"
 	}
 
-	dayElement.innerHTML = "<span class='day-number'>"+ date + "</span>";
+	dayDOM.innerHTML = "<span class='day-number'>"+ day.dayOfMonth + "</span>";
 
-	return dayElement;
+	return dayDOM;
 }
 
 var appendDayElement = function (date, day, currentMonth) {
@@ -110,27 +119,12 @@ var appendDayElement = function (date, day, currentMonth) {
 
 var previousMonthClick = function () {
 	selectedDate.setMonth(selectedMonth() - 1);
-	rerenderCalendar();
-	rerenderMonthLabel();
+	renderCalendar();
 }
 
 var nextMonthClick = function () {
 	selectedDate.setMonth(selectedMonth() + 1);
-	rerenderCalendar();
-	rerenderMonthLabel();
+	renderCalendar();
 }
 
-var rerenderCalendar = function () {
-	var calendarBody = document.getElementById("calendar-body");
-	calendarBody.innerHTML = "";
-	buildMonthDays();
-}
-
-var rerenderMonthLabel = function () {
-	var monthLabelElement = document.getElementById("month-label");
-	monthLabelElement.innerHTML = "";
-	renderNavElement();
-}
-
-renderNavElement();
-buildMonthDays();
+renderCalendar();

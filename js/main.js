@@ -44,7 +44,7 @@ var buildMonthDays = function () {
 	var nextMonthDate = 1;
 
 	var calendarBody = document.getElementById("calendar-body");
-	var isCurrentMonth = false;
+	var isThisMonth = false;
 
 	for(var i=0; i<6; i++) {
 		month[i] = [];
@@ -54,26 +54,26 @@ var buildMonthDays = function () {
 				if (j >= firstDayOfMonth) {
 					month[i][j] = currentMonthDate;
 					currentMonthDate ++;
-					isCurrentMonth = true;
+					isThisMonth = true;
 
 				} else {
 					month[i][j] = previousMonthDate;
 					previousMonthDate ++;
-					isCurrentMonth = false;
+					isThisMonth = false;
 				}
 			} else {
 				if(currentMonthDate <= numberOfDays) {
 					month[i][j] = currentMonthDate;
 					currentMonthDate++;
-					isCurrentMonth = true;
+					isThisMonth = true;
 				} else {
 					month[i][j] = nextMonthDate;
 					nextMonthDate ++;
-					isCurrentMonth = false;
+					isThisMonth = false;
 				}
 			}
 
-			appendDayElement(month[i][j], j, isCurrentMonth);
+			appendDayElement(month[i][j], j, isThisMonth);
 		}
 	}
 
@@ -82,7 +82,7 @@ var buildMonthDays = function () {
 
 var renderDayElement = function (date, day, currentMonth) {
 	var dayElement = document.createElement('div');
-	var today = new Date().getDate();
+	var today = new Date();
 
 	if (day === 0 || day === 6) {
 		dayElement.setAttribute("class", "day-column weekend");
@@ -90,7 +90,7 @@ var renderDayElement = function (date, day, currentMonth) {
 		dayElement.setAttribute("class", "day-column");
 	}
 
-	if(date === today) {
+	if(date === today.getDate()) {
 		dayElement.className += " today";
 	}
 
@@ -106,6 +106,30 @@ var renderDayElement = function (date, day, currentMonth) {
 var appendDayElement = function (date, day, currentMonth) {
 	var calendarBody = document.getElementById("calendar-body");
 	calendarBody.appendChild(renderDayElement(date, day, currentMonth));
+}
+
+var previousMonthClick = function () {
+	selectedDate.setMonth(selectedMonth() - 1);
+	rerenderCalendar();
+	rerenderMonthLabel();
+}
+
+var nextMonthClick = function () {
+	selectedDate.setMonth(selectedMonth() + 1);
+	rerenderCalendar();
+	rerenderMonthLabel();
+}
+
+var rerenderCalendar = function () {
+	var calendarBody = document.getElementById("calendar-body");
+	calendarBody.innerHTML = "";
+	buildMonthDays();
+}
+
+var rerenderMonthLabel = function () {
+	var monthLabelElement = document.getElementById("month-label");
+	monthLabelElement.innerHTML = "";
+	renderNavElement();
 }
 
 renderNavElement();

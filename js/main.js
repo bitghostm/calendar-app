@@ -20,6 +20,16 @@ Date.prototype.firstDayOfMonth= function(){
     return d.getDay();
 }
 
+var renderNavElement = function () {
+	var currentMonth = MONTH_LABEL[selectedDate.getMonth()];
+	var currentYear = selectedDate.getFullYear();
+	var monthAndYearLabel = currentMonth + ", " + currentYear;
+
+	var monthLabelElement = document.getElementById("month-label");
+	monthLabelElement.appendChild(document.createTextNode(monthAndYearLabel));
+}
+
+
 var buildMonthDays = function () {
 	var month = [];
 	var numberOfDays = selectedDate.monthDays();
@@ -33,31 +43,70 @@ var buildMonthDays = function () {
 	var currentMonthDate = 1;
 	var nextMonthDate = 1;
 
+	var calendarBody = document.getElementById("calendar-body");
+	var isCurrentMonth = false;
+
 	for(var i=0; i<6; i++) {
 		month[i] = [];
 		for(var j=0; j<7; j++) {
+
 			if (i === 0) {
 				if (j >= firstDayOfMonth) {
 					month[i][j] = currentMonthDate;
 					currentMonthDate ++;
+					isCurrentMonth = true;
+
 				} else {
 					month[i][j] = previousMonthDate;
 					previousMonthDate ++;
+					isCurrentMonth = false;
 				}
 			} else {
 				if(currentMonthDate <= numberOfDays) {
 					month[i][j] = currentMonthDate;
 					currentMonthDate++;
+					isCurrentMonth = true;
 				} else {
 					month[i][j] = nextMonthDate;
 					nextMonthDate ++;
+					isCurrentMonth = false;
 				}
 			}
+
+			appendDayElement(month[i][j], j, isCurrentMonth);
 		}
 	}
-	
+
 	return month;
 }
 
+var renderDayElement = function (date, day, currentMonth) {
+	var dayElement = document.createElement('div');
+	var today = new Date().getDate();
 
-console.log(buildMonthDays());
+	if (day === 0 || day === 6) {
+		dayElement.setAttribute("class", "day-column weekend");
+	} else {
+		dayElement.setAttribute("class", "day-column");
+	}
+
+	if(date === today) {
+		dayElement.className += " today";
+	}
+
+	if(!currentMonth) {
+		dayElement.className += " not-in-month"
+	}
+
+	dayElement.innerHTML = "<span class='day-number'>"+ date + "</span>";
+
+	return dayElement;
+}
+
+var appendDayElement = function (date, day, currentMonth) {
+	var calendarBody = document.getElementById("calendar-body");
+	calendarBody.appendChild(renderDayElement(date, day, currentMonth));
+}
+
+renderNavElement();
+buildMonthDays();

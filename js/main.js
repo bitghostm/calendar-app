@@ -1,6 +1,8 @@
 var WEEK_LABEL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 var MONTH_LABEL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+var weatherAPIURL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D9807%20&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+
 var selectedDate = new Date();
 var selectedMonth = function () {
 	return selectedDate.getMonth();
@@ -235,16 +237,37 @@ var renderEventListDOM = function(day) {
 
 	var monthNavDOM = document.getElementById('month-nav');
 
-	if(day.events) {
+	if(day.events.length > 0) {
 		day.events.forEach(function(event) {
 			eventList.appendChild(renderEventDOM(event));
 		});
 	} else {
 		eventList.innerHTML = "";
-		eventList.appendChild(document.createTextNode("There is no event."));
+		eventListContainer.appendChild(document.createTextNode("There is no event."));
 	}
 
 	renderEventViewNav();
+	fetchWeatherData();
+}
+
+var renderWeatherDOM = function(data) {
+	console.log(data);
+	var eventListContainer = document.getElementById('event-list-container');
+	var weatherDOM = document.createElement('div');
+	var location = document.createElement('div');
+	var detail = document.createElement('div');
+
+	weatherDOM.setAttribute('id', 'weather');
+	location.setAttribute('id', 'location');
+	detail.setAttribute('id', 'detail');
+
+	location.appendChild(document.createTextNode(data.location.city + ", " + data.location.region));
+	detail.appendChild(document.createTextNode("High: " + data.forecast.high + " Low: " + data.forecast.low + " " + data.forecast.text));
+	weatherDOM.appendChild(location);
+	weatherDOM.appendChild(detail);
+
+	eventListContainer.appendChild(weatherDOM);
+
 }
 
 var renderEventDOM = function(event) {
@@ -277,7 +300,7 @@ var renderEventDOM = function(event) {
 
 	title.appendChild(document.createTextNode(event.name));
 	if(event.start && event.end) {
-		time.appendChild(document.createTextNode(event.start + ' - ' + event.end));
+		time.appendChild(document.createTextNode(event.start + ':00' + ' - ' + event.end + ':00'));
 	}
 	if(event.notes) {
 		notes.appendChild(document.createTextNode(event.notes));
@@ -412,6 +435,24 @@ var addEventClick = function() {
 	modalCloseClick(document.getElementById('modal_close'));
 	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
 
+}
+
+var fetchWeatherData = function() {
+	var xhttp = new XMLHttpRequest();
+	var result = {};
+	xhttp.onreadystatechange = function() {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			var response = JSON.parse(xhttp.responseText);
+			var forecast = response.query.results.channel.item.forecast;
+			var location = response.query.results.channel.location;
+			
+			result.forecast = forecast[0];
+			result.location = location;
+			renderWeatherDOM(result);
+		}
+	};
+	xhttp.open("GET", weatherAPIURL, true);
+	xhttp.send();
 }
 
 

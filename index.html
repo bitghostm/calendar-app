@@ -8,25 +8,15 @@
 <body>
   <div id="main">
     <div id="nav">
-      <button type="button" onclick="previousMonthClick()">Previous</button>
-      <button type="button" onclick="nextMonthClick()">Next</button>
-
+      <span id="month-nav">
+      </span>
       <span id="month-label">
       </span>
+      <span id="new-event"></span>
     </div>
-    <div id="calendar-container">
-      <div id="header-row">
-        <div class="day-column weekend">Sun</div>
-        <div class="day-column">Mon</div>
-        <div class="day-column">Tue</div>
-        <div class="day-column">Wed</div>
-        <div class="day-column">Thu</div>
-        <div class="day-column">Fri</div>
-        <div class="day-column weekend">Sat</div>
-      </div>
-      <div id="calendar-body">
-
-      </div>
+    <div id="main-container">
+      <div id="event-list-container">
+    </div>
     </div>
     <script src="js/main.js"></script>
   </body>

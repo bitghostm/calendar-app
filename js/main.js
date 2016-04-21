@@ -11,7 +11,18 @@ function Day (dm, dw, m, cm) {
 	this.dayOfWeek = dw;
 	this.month = m;
 	this.isCurrentMonth = cm;
+	this.events = [];
 };
+
+function Event (eventName, evenType, startTime, endTime) {
+	this.eventName = eventName;
+	this.evenType = evenType;
+	this.startTime = startTime;
+	this.endTime = endTime;
+	this.notes = notes;
+}
+
+var month = [];
 
 Date.prototype.monthDays= function(){
     var d= new Date(this.getFullYear(), this.getMonth()+1, 0);
@@ -24,33 +35,93 @@ Date.prototype.firstDayOfMonth= function(){
 }
 
 var renderNavElement = function () {
+	var navDOM = document.getElementById('nav');
+	var monthNavDOM = document.getElementById('month-nav');
+
+	var previousMonthButton = document.createElement('button');
+	previousMonthButton.setAttribute('type', 'button');
+	previousMonthButton.setAttribute('onclick', 'previousMonthClick()');
+	previousMonthButton.appendChild(document.createTextNode('Previous'));
+
+	var nextMonthButton = document.createElement('button');
+	nextMonthButton.setAttribute('type', 'button');
+	nextMonthButton.setAttribute('onclick', 'nextMonthClick()');
+	nextMonthButton.appendChild(document.createTextNode('Next'));
+
+	monthNavDOM.appendChild(previousMonthButton);
+	monthNavDOM.appendChild(nextMonthButton);
+
+	navDOM.insertBefore(monthNavDOM, navDOM.firstChild);
+
+	renderMonthLabel();
+}
+
+var renderMonthLabel = function () {
 	var currentMonth = MONTH_LABEL[selectedDate.getMonth()];
 	var currentYear = selectedDate.getFullYear();
 	var monthAndYearLabel = currentMonth + ", " + currentYear;
-
 	var monthLabelElement = document.getElementById("month-label");
+	monthLabelElement.setAttribute("onclick", "monthLabelClick()");
+
 	monthLabelElement.innerHTML = "";
 	monthLabelElement.appendChild(document.createTextNode(monthAndYearLabel));
 }
 
+var renderCalendar = function () {
+	var mainContainer = document.getElementById('main-container');
+	var calendarContainer = document.createElement('div');
+	calendarContainer.setAttribute('id', 'calendar-container');
+	mainContainer.appendChild(calendarContainer);
+
+	renderNavElement();		
+	renderCalendarHeader();
+	renderMonthBody();
+}
+
+var renderCalendarHeader = function () {
+	var calendarContainer = document.getElementById('calendar-container');
+	var headRow = document.createElement('div');
+	headRow.setAttribute('id', 'header-row');
+	for(var i=0; i<7 ; i++) {
+		headRow.appendChild(renderCalendarHeaderColumn(i));
+	}
+
+	calendarContainer.insertBefore(headRow, calendarContainer.firstChild);
+}
+
+var renderCalendarHeaderColumn = function (dayNumber) {
+	var headerColumn = document.createElement('div');
+
+	if(dayNumber === 0 || dayNumber === 6) {
+		headerColumn.setAttribute('class', 'day-column weekend');
+	} else {
+		headerColumn.setAttribute('class', 'day-column');
+	}
+
+	headerColumn.appendChild(document.createTextNode(WEEK_LABEL[dayNumber]));
+
+	return headerColumn;
+}
+
 var renderMonthBody = function () {
-	var month = buildMonthDays();
-	var calendarBody = document.getElementById("calendar-body");
+	buildMonthDays();
+	var calendarContainer = document.getElementById('calendar-container');
+	var calendarBody = document.createElement("div");
+	calendarBody.setAttribute('id', 'calendar-body');
+	calendarContainer.appendChild(calendarBody);
+
 	calendarBody.innerHTML = "";
-	month.forEach(function(week) {
-		week.forEach(function(day) {
-			calendarBody.appendChild(createDayDOM(day));
+	month.forEach(function(week, i) {
+		week.forEach(function(day, j) {
+			var dayDOM = createDayDOM(day);
+			dayDOM.week = i;
+			dayDOM.day = j;
+			calendarBody.appendChild(dayDOM);
 		})
 	})
 }
 
-var renderCalendar = function () {
-	renderNavElement();
-	renderMonthBody();
-}
-
 var buildMonthDays = function () {
-	var month = [];
 	var numberOfDays = selectedDate.monthDays();
 	var lastMonthDate = new Date(selectedDate);
 	lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
@@ -86,7 +157,6 @@ var buildMonthDays = function () {
 			}
 		}
 	}
-	return month;
 }
 
 var createDayDOM = function (day) {
@@ -99,6 +169,9 @@ var createDayDOM = function (day) {
 		dayDOM.setAttribute("class", "day-column");
 	}
 
+	dayDOM.setAttribute("onmouseover", "mouseOverDayDOM(this)");
+	dayDOM.setAttribute("onclick", "mouseClickDayDOM(this)");
+
 	if(day.dayOfMonth === today.getDate() && today.getMonth() === day.month) {
 		dayDOM.className += " today";
 	}
@@ -109,7 +182,18 @@ var createDayDOM = function (day) {
 
 	dayDOM.innerHTML = "<span class='day-number'>"+ day.dayOfMonth + "</span>";
 
+
 	return dayDOM;
+}
+
+var mouseOverDayDOM = function (ele) {
+	var dayNumberDOM = ele.getElementsByClassName('day-number');
+	var thisDay = dayNumberDOM[0].textContent;
+}
+
+var mouseClickDayDOM = function (ele) {
+	var day = month[ele.week][ele.day];
+	renderEventListDOM(day);
 }
 
 var appendDayElement = function (date, day, currentMonth) {
@@ -119,12 +203,68 @@ var appendDayElement = function (date, day, currentMonth) {
 
 var previousMonthClick = function () {
 	selectedDate.setMonth(selectedMonth() - 1);
-	renderCalendar();
+	renderMonthLabel();
+	renderMonthBody();
 }
 
 var nextMonthClick = function () {
 	selectedDate.setMonth(selectedMonth() + 1);
+	renderMonthLabel();
+	renderMonthBody();
+}
+
+var monthLabelClick = function () {
+	resetDOM();
 	renderCalendar();
+}
+
+var renderEventListDOM = function (day) {
+	resetDOM();
+	var eventListContainer = document.getElementById('event-list-container');
+	var eventList = document.createElement("div");
+
+	eventList.setAttribute('class', 'event-list');
+
+	eventListContainer.appendChild(eventList);
+
+	var monthNavDOM = document.getElementById('month-nav');
+
+	if(day.events.length) {
+		day.events.forEach(function(event) {
+			renderEventDOM(event);
+		});
+	} else {
+		eventList.innerHTML = "";
+		eventList.appendChild(document.createTextNode("There is no event."));
+	}
+	renderEventViewNav();
+}
+
+var renderEventDOM = function (event) {
+
+}
+
+var renderEventViewNav = function (day) {
+	var newEvent = document.getElementById("new-event");
+	var newEventButton = document.createElement('button');
+	newEventButton.setAttribute('type', 'button');
+	newEventButton.setAttribute('onclick', 'addEventClick()');
+	newEventButton.appendChild(document.createTextNode('New event'));
+
+	newEvent.appendChild(newEventButton);
+}
+
+var resetDOM = function () {
+	var eventListContainer = document.getElementById('event-list-container');
+	var monthNav = document.getElementById('month-nav');
+	var calendarContainer = document.getElementById('calendar-container');
+	var newEvent = document.getElementById("new-event");
+
+
+	monthNav.innerHTML = "";
+	calendarContainer.innerHTML = "";
+	eventListContainer.innerHTML = "";
+	newEvent.innerHTML = "";
 }
 
 renderCalendar();

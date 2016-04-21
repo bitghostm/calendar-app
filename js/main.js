@@ -4,9 +4,7 @@ var MONTH_LABEL = ["January", "February", "March", "April", "May", "June", "July
 var weatherAPIURL = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%3D9807%20&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
 
 var selectedDate = new Date();
-var selectedMonth = function () {
-	return selectedDate.getMonth();
-}
+var selectedMonth = selectedDate.getMonth();
 
 function Day (dm, dw, m, cm) {
 	this.dayOfMonth = dm;
@@ -25,7 +23,7 @@ function Event (id, name, type, start, end, notes) {
 	this.notes = notes;
 }
 
-var month = [];
+var year = [];
 var selectedDay = {
 	week: -1,
 	day: -1
@@ -80,6 +78,7 @@ var renderCalendar = function() {
 	calendarContainer.setAttribute('id', 'calendar-container');
 	mainContainer.appendChild(calendarContainer);
 
+	resetDOM();
 	renderNavElement();		
 	renderCalendarHeader();
 	renderMonthBody();
@@ -118,7 +117,7 @@ var renderMonthBody = function() {
 	calendarContainer.appendChild(calendarBody);
 
 	calendarBody.innerHTML = "";
-	month.forEach(function(week, i) {
+	year[selectedMonth].forEach(function(week, i) {
 		week.forEach(function(day, j) {
 			var dayDOM = createDayDOM(day);
 			dayDOM.week = i;
@@ -129,6 +128,10 @@ var renderMonthBody = function() {
 }
 
 var buildMonthDays = function() {
+	if(year[selectedMonth]) {
+		return;
+	}
+	var month=[];
 	var numberOfDays = selectedDate.monthDays();
 	var lastMonthDate = new Date(selectedDate);
 	lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
@@ -150,7 +153,7 @@ var buildMonthDays = function() {
 					currentMonthDate ++;
 
 				} else {
-					month[i][j] = new Day(previousMonthDate, j, selectedDate.getMonth(), false);
+					month[i][j] = new Day(previousMonthDate, j, selectedDate.getMonth() - 1, false);
 					previousMonthDate ++;
 				}
 			} else {
@@ -158,12 +161,13 @@ var buildMonthDays = function() {
 					month[i][j] = new Day(currentMonthDate, j, selectedDate.getMonth(), true);
 					currentMonthDate++;
 				} else {
-					month[i][j] = new Day(nextMonthDate, j, selectedDate.getMonth(), false);
+					month[i][j] = new Day(nextMonthDate, j, selectedDate.getMonth() + 1, false);
 					nextMonthDate ++;
 				}
 			}
 		}
 	}
+	year[selectedMonth] = month;
 }
 
 var createDayDOM = function(day) {
@@ -189,6 +193,12 @@ var createDayDOM = function(day) {
 
 	dayDOM.innerHTML = "<span class='day-number'>"+ day.dayOfMonth + "</span>";
 
+	if(day.events.length === 1) {
+		dayDOM.innerHTML+= "<span class='event-number'>"+ day.events.length + " Event</span>";
+	} else if(day.events.length > 1) {
+		dayDOM.innerHTML+= "<span class='event-number'>"+ day.events.length + " Events</span>";	
+	}
+	 
 	return dayDOM;
 }
 
@@ -198,7 +208,7 @@ var mouseOverDayDOM = function(ele) {
 }
 
 var mouseClickDayDOM = function(ele) {
-	var day = month[ele.week][ele.day];
+	var day = year[selectedMonth][ele.week][ele.day];
 	selectedDay.week = ele.week;
 	selectedDay.day = ele.day;
 	renderEventListDOM(day);
@@ -210,15 +220,23 @@ var appendDayElement = function(date, day, currentMonth) {
 }
 
 var previousMonthClick = function() {
-	selectedDate.setMonth(selectedMonth() - 1);
-	renderMonthLabel();
-	renderMonthBody();
+	if(selectedMonth > 0) {
+		selectedMonth--;
+		selectedDate.setMonth(selectedMonth);
+		renderCalendar();
+	} else {
+		alert("This calendar only support current year for now");
+	}	
 }
 
 var nextMonthClick = function() {
-	selectedDate.setMonth(selectedMonth() + 1);
-	renderMonthLabel();
-	renderMonthBody();
+	if(selectedMonth < 11 ) {
+		selectedMonth++;
+		selectedDate.setMonth(selectedMonth);
+		renderCalendar();
+	} else {
+		alert("This calendar only support current year for now");
+	}
 }
 
 var monthLabelClick = function() {
@@ -229,6 +247,11 @@ var monthLabelClick = function() {
 var renderEventListDOM = function(day) {
 	resetDOM();
 	var eventListContainer = document.getElementById('event-list-container');
+	var monthLabel = document.getElementById('month-label');
+
+	monthLabel.textContent = "";
+	monthLabel.appendChild(document.createTextNode(MONTH_LABEL[day.month] + " " + day.dayOfMonth));
+
 	var eventList = document.createElement("div");
 
 	eventList.setAttribute('id', 'event-list');
@@ -251,7 +274,6 @@ var renderEventListDOM = function(day) {
 }
 
 var renderWeatherDOM = function(data) {
-	console.log(data);
 	var eventListContainer = document.getElementById('event-list-container');
 	var weatherDOM = document.createElement('div');
 	var location = document.createElement('div');
@@ -267,7 +289,6 @@ var renderWeatherDOM = function(data) {
 	weatherDOM.appendChild(detail);
 
 	eventListContainer.appendChild(weatherDOM);
-
 }
 
 var renderEventDOM = function(event) {
@@ -291,7 +312,7 @@ var renderEventDOM = function(event) {
 
 	removeClick.appendChild(document.createTextNode("Remove"));
 	removeClick.setAttribute('href', '#');
-	removeClick.setAttribute('onclick', 'removeEventClick()');
+	removeClick.setAttribute('onclick', 'removeEventClick(this.parentNode.parentNode)');
 	edit.appendChild(removeClick);
 	
 	title.setAttribute('class', 'event-title');
@@ -330,8 +351,6 @@ var renderEventViewNav = function(day) {
 var editEventClick = function(e) {
 	var title = e.getElementsByClassName('event-title')[0];
 	var notes = e.getElementsByClassName('event-notes')[0];
-		console.log("notes", notes);
-
 
 	var titleValue = title.textContent;
 	var titleInput = document.createElement('input');
@@ -339,12 +358,10 @@ var editEventClick = function(e) {
 	titleInput.setAttribute('value', titleValue);
 	titleInput.setAttribute('class', 'edit-title');
 
-	
 	var notesValue = notes.textContent;
 	var notesInput = document.createElement('textarea');
 	notesInput.setAttribute('class', 'edit-notes');
 	notesInput.setAttribute('value', notesValue);
-	
 	
 	var save = document.createElement('button');
 	save.setAttribute('type', 'button');
@@ -356,13 +373,24 @@ var editEventClick = function(e) {
 	cancel.setAttribute('onclick', 'cancelEdittedEventClick(this.parentNode)');
 	cancel.appendChild(document.createTextNode('Cancel'));
 
-
 	title.textContent = "";
 	// notes.textContent = "";
 	title.appendChild(titleInput);
 	// notes.appendChild(notesInput);
 	e.appendChild(save);
 	e.appendChild(cancel);
+}
+
+var removeEventClick = function(e){
+	var id = e.id;
+	id = parseInt(id.replace("event", ""));
+
+	for(var i=1; i+id <year[selectedMonth][selectedDay.week][selectedDay.day].events.length; i++) {
+		year[selectedMonth][selectedDay.week][selectedDay.day].events[id+i].id = id+i-1;
+	}
+	
+	year[selectedMonth][selectedDay.week][selectedDay.day].events.splice(id, 1);
+	renderEventListDOM(year[selectedMonth][selectedDay.week][selectedDay.day]);
 }
 
 var saveEdittedEventClick = function(e) {
@@ -375,13 +403,13 @@ var saveEdittedEventClick = function(e) {
 	var id = e.id;
 	id = parseInt(id.replace("event", ""));
 
-	month[selectedDay.week][selectedDay.day].events[id].name = name;
+	year[selectedMonth][selectedDay.week][selectedDay.day].events[id].name = name;
 
-	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
+	renderEventListDOM(year[selectedMonth][selectedDay.week][selectedDay.day]);
 }
 
 var cancelEdittedEventClick = function(){
-	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
+	renderEventListDOM(year[selectedMonth][selectedDay.week][selectedDay.day]);
 }
 
 //The code for the new event modal is edited based on a online tutorial 
@@ -427,14 +455,13 @@ var addEventClick = function() {
 	} else if(document.getElementById('new-event-type-r3').checked) {
 		type = document.getElementById('new-event-type-r3').value;
 	}
-	var id = month[selectedDay.week][selectedDay.day].events.length;
+	var id = year[selectedMonth][selectedDay.week][selectedDay.day].events.length;
 	var newEvent = new Event(id, name, type, start, end, notes);
-	month[selectedDay.week][selectedDay.day].events.push(newEvent);
+	year[selectedMonth][selectedDay.week][selectedDay.day].events.push(newEvent);
 
 	resetNewEventModalInput();
 	modalCloseClick(document.getElementById('modal_close'));
-	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
-
+	renderEventListDOM(year[selectedMonth][selectedDay.week][selectedDay.day]);
 }
 
 var fetchWeatherData = function() {
@@ -478,4 +505,5 @@ var resetDOM = function() {
 	newEvent.innerHTML = "";
 }
 
+buildMonthDays();
 renderCalendar();

@@ -15,9 +15,88 @@
       <span id="new-event"></span>
     </div>
     <div id="main-container">
-      <div id="event-list-container">
+      <div id="event-list-container"></div>
     </div>
-    </div>
-    <script src="js/main.js"></script>
-  </body>
-  </html>
+    
+    <div id="modal-wrapper">
+      <div id="modal-window">
+        <div style="text-align: right;"><a id="modal_close" onclick="modalCloseClick(this)" href="#">close <b>X</b></a></div>
+
+        <div>New Event</div>
+          <p><label>Event Title<strong>*</strong><br>
+            <input type="text" id='new-event-name' size="48" name="title" value=""></label>
+          </p>
+          <p><label>Event Type<br>
+            <input type="radio" id='new-event-type-r1' size="48" name="type" value="meeting" checked>Meeting</label>
+            <input type="radio" id='new-event-type-r2' size="48" name="type" value="appointment">Appointment</label>
+            <input type="radio" id='new-event-type-r3' size="48" name="type" value="task">Task</label>
+          </p>
+          <p><label>Time<br>
+            <select id='new-event-start' name="start">
+              <option selected="selected" value=""></option>
+              <option value="0">0:00</option>
+              <option value="1">1:00</option>
+              <option value="2">2:00</option>
+              <option value="3">3:00</option>
+              <option value="4">4:00</option>
+              <option value="5">5:00</option>
+              <option value="6">6:00</option>
+              <option value="7">7:00</option>
+              <option value="8">8:00</option>
+              <option value="9">9:00</option>
+              <option value="10">10:00</option>
+              <option value="11">11:00</option>
+              <option value="12">12:00</option>
+              <option value="13">13:00</option>
+              <option value="14">14:00</option>
+              <option value="15">15:00</option>
+              <option value="16">16:00</option>
+              <option value="17">17:00</option>
+              <option value="18">18:00</option>
+              <option value="19">19:00</option>
+              <option value="20">20:00</option>
+              <option value="21">21:00</option>
+              <option value="22">22:00</option>
+              <option value="23">23:00</option>
+              <option value="24">24:00</option>
+            </select>
+            to
+            <select id='new-event-end' name="end">
+              <option selected="selected" value=""></option>
+              <option value="0">0:00</option>
+              <option value="1">1:00</option>
+              <option value="2">2:00</option>
+              <option value="3">3:00</option>
+              <option value="4">4:00</option>
+              <option value="5">5:00</option>
+              <option value="6">6:00</option>
+              <option value="7">7:00</option>
+              <option value="8">8:00</option>
+              <option value="9">9:00</option>
+              <option value="10">10:00</option>
+              <option value="11">11:00</option>
+              <option value="12">12:00</option>
+              <option value="13">13:00</option>
+              <option value="14">14:00</option>
+              <option value="15">15:00</option>
+              <option value="16">16:00</option>
+              <option value="17">17:00</option>
+              <option value="18">18:00</option>
+              <option value="19">19:00</option>
+              <option value="20">20:00</option>
+              <option value="21">21:00</option>
+              <option value="22">22:00</option>
+              <option value="23">23:00</option>
+              <option value="24">24:00</option>
+            </select>
+          </p>
+          <p><label>Notes<br>
+              <textarea name="notes" id='new-event-notes' cols="48" rows="8"></textarea></label></p>
+          <p><input type="button" name="newEventForm" onclick="addEventClick()" value="Add Event"></p>
+      </div>
+    </div> 
+
+  </div>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -112,9 +112,13 @@
 }
 
 #main-container #event-list-container .event {
-	border-bottom: solid 1px #c1c1c1;
+	border-bottom: solid 1px #e1e1e1;
 	padding: 20px;
 	width: 700px;
+}
+
+#main-container #event-list-container #event-list #edit-event {
+	text-align: right;
 }
 
 #main-container #event-list-container #event-list .event-title {

@@ -254,8 +254,26 @@ var renderEventDOM = function(event) {
 	var title = document.createElement('div');
 	var time = document.createElement('div');
 	var notes = document.createElement('div');
+	var edit = document.createElement('div');
+	var editClick = document.createElement('a');
+	var removeClick = document.createElement('a');
 
+	edit.setAttribute('id', 'edit-event');
+
+	editClick.appendChild(document.createTextNode("Edit"));
+	editClick.setAttribute('href', '#');
+	editClick.setAttribute('onclick', 'editEventClick(this.parentNode.parentNode)');
+	editClick.setAttribute('style', 'margin-right: 10px');
+	edit.appendChild(editClick);
+
+	removeClick.appendChild(document.createTextNode("Remove"));
+	removeClick.setAttribute('href', '#');
+	removeClick.setAttribute('onclick', 'removeEventClick()');
+	edit.appendChild(removeClick);
+	
 	title.setAttribute('class', 'event-title');
+	time.setAttribute('class', 'event-time');
+	notes.setAttribute('class', 'event-notes');
 
 	title.appendChild(document.createTextNode(event.name));
 	if(event.start && event.end) {
@@ -270,6 +288,8 @@ var renderEventDOM = function(event) {
 	thisEventDOM.appendChild(notes);
 	thisEventDOM.insertBefore(time, notes);
 	thisEventDOM.insertBefore(title, time);
+	thisEventDOM.insertBefore(edit, title);
+
 	return thisEventDOM;
 }
 
@@ -284,9 +304,65 @@ var renderEventViewNav = function(day) {
 	newEvent.appendChild(newEventButton);
 }
 
+var editEventClick = function(e) {
+	var title = e.getElementsByClassName('event-title')[0];
+	var notes = e.getElementsByClassName('event-notes')[0];
+		console.log("notes", notes);
+
+
+	var titleValue = title.textContent;
+	var titleInput = document.createElement('input');
+	titleInput.setAttribute('type', 'text');
+	titleInput.setAttribute('value', titleValue);
+	titleInput.setAttribute('class', 'edit-title');
+
+	
+	var notesValue = notes.textContent;
+	var notesInput = document.createElement('textarea');
+	notesInput.setAttribute('class', 'edit-notes');
+	notesInput.setAttribute('value', notesValue);
+	
+	
+	var save = document.createElement('button');
+	save.setAttribute('type', 'button');
+	save.setAttribute('onclick', 'saveEdittedEventClick(this.parentNode)');
+	save.appendChild(document.createTextNode('Save'));
+
+	var cancel = document.createElement('button');
+	cancel.setAttribute('type', 'button');
+	cancel.setAttribute('onclick', 'cancelEdittedEventClick(this.parentNode)');
+	cancel.appendChild(document.createTextNode('Cancel'));
+
+
+	title.textContent = "";
+	// notes.textContent = "";
+	title.appendChild(titleInput);
+	// notes.appendChild(notesInput);
+	e.appendChild(save);
+	e.appendChild(cancel);
+}
+
+var saveEdittedEventClick = function(e) {
+	var name = e.getElementsByClassName('edit-title')[0].value;
+	if(!name) {
+		alert("Missing event title! please type the event title.");
+		return;
+	}
+
+	var id = e.id;
+	id = parseInt(id.replace("event", ""));
+
+	month[selectedDay.week][selectedDay.day].events[id].name = name;
+
+	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
+}
+
+var cancelEdittedEventClick = function(){
+	renderEventListDOM(month[selectedDay.week][selectedDay.day]);
+}
+
 //The code for the new event modal is edited based on a online tutorial 
 //source: http://www.the-art-of-web.com/javascript/feedback-modal-window/
-
 var newEventClick = function(e) {
 	var modalWrapper = document.getElementById("modal-wrapper");
     var modalWindow  = document.getElementById("modal-window");
@@ -354,7 +430,6 @@ var resetDOM = function() {
 	var monthNav = document.getElementById('month-nav');
 	var calendarContainer = document.getElementById('calendar-container');
 	var newEvent = document.getElementById("new-event");
-
 
 	monthNav.innerHTML = "";
 	calendarContainer.innerHTML = "";
